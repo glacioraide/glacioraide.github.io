@@ -1,0 +1,12 @@
+
+
+<div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+  <img src="assets/LOGO_CNRS_BLEU.png" style="height: 60px;">
+  <img src="assets/lapp-logo.png" style="height: 60px;">
+  <img src="assets/logo-edytem.png" style="height: 60px;">
+  <img src="assets/Logo_USMB_web_grand_RVB.png" style="height: 60px;">
+</div>
+
+
+Projet pour l'instrumentation et l'étude des glaciers suspendus en collaboration entre EDYTEM (USMB, CNRS) et le LAPP (USMB, CNRS).
+
