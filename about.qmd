@@ -2,4 +2,11 @@
 title: "About"
 ---
 
-About this site
+## Collaborateurs
+
+- Ludovic Ravanel (EDYTEM)
+- Xavier Cailhol (EDYTEM)
+- Emmanuel Malet (EDYTEM)
+- Jessica Leveque (LAPP)
+- Eric Chabanne (LAPP)
+- Thomas Vuillaume (LAPP)
