@@ -4,6 +4,8 @@ project:
 website:
   title: "GLACIORAIDE"
   navbar:
+    logo: "assets/logo-glacioraide.png"
+    favicon: "assets/logo-glacioraide.png"
     left:
       - href: index.qmd
         text: Home
