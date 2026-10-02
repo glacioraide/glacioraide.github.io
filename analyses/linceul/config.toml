@@ -1,0 +1,58 @@
+# Configuration de l'analyse du site Linceul.
+# Lue par pipeline.py ; une copie est incluse dans chaque paquet de résultats publié.
+
+site = "linceul"
+staketracker_version = "0.2.0"   # le pipeline refuse de tourner avec une autre version
+photos_root = "/uds_data/glacioraide/photos_sites/Linceul"
+px_per_metre = 177.0
+
+[meteo]
+latitude = 45.8698
+longitude = 6.9871
+
+[web]
+min_photos_per_day = 3   # jours avec moins de photos valides ignorés
+smooth_days = 7          # fenêtre de la médiane glissante (tendance)
+
+# Une période par réglage de caméra. Si la caméra bouge, ajouter une période.
+# roi = [x, y, largeur, hauteur] en pixels, coin haut-gauche.
+# Note : appareil1/100RECNX et 101RECNX sont des copies des périodes 1 à 3 ;
+# appareil2 n'est pas utilisé (même période, rien après le 10/10/2025).
+
+[[periods]]
+id = "p1"
+label = "Été-automne 2024"
+input_dir = "linceul_20240717-20241110"
+roi = [1535, 330, 30, 80]
+threshold = 140
+source = "staketracker/workflow.sh"
+
+[[periods]]
+id = "p2"
+label = "Hiver 2024-2025"
+input_dir = "linceul_20241111-20250331"
+roi = [1510, 330, 40, 100]
+threshold = 200
+source = "staketracker/workflow.sh"
+
+[[periods]]
+id = "p3"
+label = "Printemps-été 2025"
+input_dir = "linceul_20250401-20251010"
+roi = [1820, 310, 50, 140]
+threshold = 140
+source = "staketracker/workflow.sh"
+
+[[periods]]
+id = "p4"
+label = "Hiver 2025-2026"
+input_dir = "linceul_mission26062026/appareil1/102RECNX"
+roi = [1525, 320, 60, 120]
+threshold = 140
+source = "caméra recadrée en octobre 2025, ROI choisie manuellement"
+
+# Photo d'illustration de la méthode : même balise à deux dates.
+[illustration]
+period = "p3"
+images = ["RCNX1533.JPG", "RCNX2382.JPG"]
+crop = [1760, 280, 1940, 460]   # x0, y0, x1, y1

@@ -1,0 +1,279 @@
+---
+title: "Glacier du Linceul"
+subtitle: "Évolution de la surface du glacier mesurée par une caméra automatique"
+toc: false
+resources:
+  - data/linceul/**
+---
+
+```{ojs}
+//| echo: false
+Plotly = {
+  const P = await require("https://cdn.plot.ly/plotly-2.35.2.min.js");
+  P.register({moduleType: "locale", name: "fr", dictionary: {}, format: {
+    days: ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"],
+    shortDays: ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."],
+    months: ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"],
+    shortMonths: ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."],
+    date: "%d/%m/%Y"
+  }});
+  return P;
+}
+surface = FileAttachment("data/linceul/surface_daily.csv").csv({typed: true})
+meteo = FileAttachment("data/linceul/meteo_daily.csv").csv({typed: true})
+metadata = FileAttachment("data/linceul/metadata.json").json()
+// Ajouté par le workflow de déploiement ; absent lors d'un rendu local.
+release = FileAttachment("data/linceul/release.json").json().catch(() => null)
+```
+
+```{ojs}
+//| echo: false
+analysisDate = new Date(metadata.analysis_date).toLocaleDateString("fr-FR", {day: "numeric", month: "long", year: "numeric"})
+html`<p class="provenance-line">
+  Analyse du <strong>${analysisDate}</strong> ·
+  <a href="https://github.com/glacioraide/staketracker/releases/tag/v${metadata.staketracker.version}">staketracker ${metadata.staketracker.version}</a>
+  · <a href="#provenance">détails</a>
+</p>`
+```
+
+Une caméra automatique photographie toutes les heures une balise plantée dans le glacier.
+La longueur de balise qui dépasse de la surface indique si celle-ci **monte** (chute de neige)
+ou **descend** (fonte, érosion par le vent).
+
+```{ojs}
+//| echo: false
+stats = {
+  const first = surface[0].date, last = surface[surface.length - 1].date;
+  const months = Math.round((last - first) / (1000 * 3600 * 24 * 30.44));
+  const lowest = surface.reduce((a, b) => (b.lisse_cm < a.lisse_cm ? b : a));
+  return {first, last, months, lowest, final: surface[surface.length - 1].lisse_cm, days: surface.length};
+}
+fmt = d => d.toLocaleDateString("fr-FR", {day: "numeric", month: "long", year: "numeric", timeZone: "UTC"})
+signed = v => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(Math.round(v))} cm`
+
+html`<div class="stat-tiles">
+  <div class="stat-tile">
+    <div class="stat-label">Période suivie</div>
+    <div class="stat-value">${stats.months} mois</div>
+    <div class="stat-note">du ${fmt(stats.first)} au ${fmt(stats.last)}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-label">Jours de mesure</div>
+    <div class="stat-value">${stats.days}</div>
+    <div class="stat-note">jours avec au moins 3 photos exploitables</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-label">Niveau le plus bas</div>
+    <div class="stat-value">${signed(stats.lowest.lisse_cm)}</div>
+    <div class="stat-note">atteint le ${fmt(stats.lowest.date)}</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-label">Dernier relevé</div>
+    <div class="stat-value">${signed(stats.final)}</div>
+    <div class="stat-note">par rapport au ${fmt(stats.first)}</div>
+  </div>
+</div>`
+```
+
+## Variation de la surface du glacier
+
+```{ojs}
+//| echo: false
+viewof zoom = Inputs.radio(
+  new Map([
+    ["Tout", null],
+    ["Été 2024", ["2024-07-10", "2024-10-15"]],
+    ["Hiver 2024-25", ["2024-11-01", "2025-04-15"]],
+    ["Été 2025", ["2025-04-01", "2025-10-15"]],
+    ["Hiver 2025-26", ["2025-10-01", "2026-04-01"]]
+  ]),
+  {value: null, label: "Afficher :"}
+)
+```
+
+```{ojs}
+//| echo: false
+chart = {
+  const blue = "#2a78d6", orange = "#eb6834", violet = "#4a3aa7";
+  const ink = "#52514e", muted = "#898781", grid = "#e1e0d9";
+
+  // Une trace par période : la courbe est interrompue quand le réglage de la caméra change.
+  const periods = [...new Set(surface.map(d => d.periode))];
+  const traces = [];
+  periods.forEach((p, i) => {
+    const rows = surface.filter(d => d.periode === p);
+    traces.push({
+      x: rows.map(d => d.date), y: rows.map(d => d.surface_cm),
+      customdata: rows.map(d => [d.n_photos, p]),
+      type: "scatter", mode: "markers", name: "Mesure du jour",
+      legendgroup: "mesure", showlegend: i === 0,
+      marker: {color: blue, opacity: 0.3, size: 6},
+      hovertemplate: "Mesure du jour : %{y:.0f} cm<br><span style='color:#898781'>%{customdata[1]} · %{customdata[0]} photos</span><extra></extra>"
+    });
+    traces.push({
+      x: rows.map(d => d.date), y: rows.map(d => d.lisse_cm),
+      type: "scatter", mode: "lines", name: "Tendance (médiane sur 7 jours)",
+      legendgroup: "tendance", showlegend: i === 0,
+      line: {color: blue, width: 2.5, shape: "spline", smoothing: 0.6},
+      hovertemplate: "Tendance : %{y:.0f} cm<extra></extra>"
+    });
+  });
+  traces.push({
+    x: meteo.map(d => d.date), y: meteo.map(d => d.temperature_c), xaxis: "x", yaxis: "y2",
+    type: "scatter", mode: "lines", name: "Température moyenne", showlegend: false,
+    line: {color: orange, width: 1.5},
+    hovertemplate: "Température : %{y:.1f} °C<extra></extra>"
+  });
+  traces.push({
+    x: meteo.map(d => d.date), y: meteo.map(d => d.neige_cm), xaxis: "x", yaxis: "y3",
+    type: "bar", name: "Chute de neige", showlegend: false,
+    marker: {color: violet},
+    hovertemplate: "Neige fraîche : %{y:.0f} cm<extra></extra>"
+  });
+
+  // Changements de réglage de la caméra et trou de mesure.
+  const changes = [
+    {date: "2024-11-14", label: "nouveau cadrage"},
+    {date: "2025-04-01", label: "nouveau cadrage"},
+    {date: "2025-10-11", label: "maintenance"}
+  ];
+  const shapes = [
+    {type: "rect", xref: "x", yref: "paper", x0: "2024-10-06", x1: "2024-11-13", y0: 0, y1: 1,
+     fillcolor: "#f0efec", line: {width: 0}, layer: "below"},
+    ...changes.map(c => ({type: "line", xref: "x", yref: "paper", x0: c.date, x1: c.date, y0: 0, y1: 1,
+      line: {color: "#c3c2b7", width: 1, dash: "dot"}})),
+    {type: "line", xref: "paper", yref: "y", x0: 0, x1: 1, y0: 0, y1: 0, line: {color: "#c3c2b7", width: 1}}
+  ];
+  const annotations = [
+    {x: "2024-10-25", y: 1, xref: "x", yref: "paper", yanchor: "top", text: "pas de<br>mesure",
+     showarrow: false, font: {size: 11, color: muted}},
+    {x: 0, y: 0.425, xref: "paper", yref: "paper", xanchor: "left", yanchor: "bottom",
+     text: "<b>Température moyenne de l'air (°C)</b>", showarrow: false, font: {size: 12, color: ink}},
+    {x: 0, y: 0.185, xref: "paper", yref: "paper", xanchor: "left", yanchor: "bottom",
+     text: "<b>Chute de neige (cm/jour)</b>", showarrow: false, font: {size: 12, color: ink}}
+  ];
+
+  const axis = {gridcolor: grid, zeroline: false, linecolor: "#c3c2b7", tickfont: {color: muted}, title: {font: {color: ink, size: 12}}};
+  const layout = {
+    height: 640,
+    margin: {l: 64, r: 16, t: 16, b: 40},
+    font: {family: "system-ui, -apple-system, 'Segoe UI', sans-serif", color: ink},
+    paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+    hovermode: "x unified",
+    hoverlabel: {bgcolor: "#ffffff", bordercolor: "#e1e0d9", font: {color: "#0b0b0b"}},
+    legend: {orientation: "h", x: 0, y: 1.06, yanchor: "bottom", font: {size: 12}},
+    xaxis: {...axis, type: "date", domain: [0, 1], anchor: "y3", tickformat: "%b %Y", hoverformat: "%-d %B %Y",
+            showspikes: true, spikemode: "across", spikethickness: 1, spikecolor: "#898781", spikedash: "solid"},
+    yaxis: {...axis, domain: [0.47, 1], title: {...axis.title, text: "Variation de la surface (cm)"}, ticksuffix: " "},
+    yaxis2: {...axis, domain: [0.24, 0.42], zeroline: true, zerolinecolor: "#c3c2b7"},
+    yaxis3: {...axis, domain: [0, 0.18], rangemode: "tozero"},
+    shapes, annotations,
+    separators: ", "
+  };
+  // Le div doit être dans la page avant le tracé, sinon Plotly ne connaît pas sa largeur.
+  const div = html`<div class="linceul-chart"></div>`;
+  yield div;
+  await Plotly.newPlot(div, traces, layout, {
+    responsive: true, displaylogo: false, locale: "fr",
+    modeBarButtonsToRemove: ["select2d", "lasso2d", "autoScale2d"],
+    toImageButtonOptions: {filename: "linceul_surface", scale: 2}
+  });
+  yield div;
+}
+```
+
+```{ojs}
+//| echo: false
+//| output: false
+{
+  if (!chart._fullLayout) return;
+  if (zoom) Plotly.relayout(chart, {"xaxis.range": zoom, "yaxis.autorange": true});
+  else Plotly.relayout(chart, {"xaxis.autorange": true, "yaxis.autorange": true});
+}
+```
+
+::: {.chart-help}
+**Lire le graphique.** La courbe bleue indique de combien la surface est plus haute (valeurs positives)
+ou plus basse (valeurs négatives) que le 17 juillet 2024. Survolez le graphique pour lire les valeurs
+d'un jour, et faites glisser la souris pour zoomer (double-clic pour revenir à la vue d'ensemble).
+Les lignes pointillées marquent un changement de réglage de la caméra.
+:::
+
+## Comment est faite la mesure ?
+
+![La même balise vue par la caméra le 12 avril 2025 (à gauche) et le 6 juillet 2025 (à droite).
+La partie visible (repère orange) passe d'environ 30 cm à 47 cm : la surface du glacier a baissé
+d'environ 17 cm.](data/linceul/balise.jpg){fig-alt="Deux photos de la balise ; en juillet la partie visible est nettement plus longue qu'en avril."}
+
+1. **Détection.** Sur chaque photo, le logiciel
+   [staketracker](https://github.com/glacioraide/staketracker) repère la balise,
+   une ligne sombre et fine sur la neige, et mesure sa longueur visible en pixels.
+2. **Nettoyage.** Les photos inutilisables (nuit, brouillard, objectif enneigé) sont écartées,
+   ainsi que les mesures qui sautent brutalement par rapport à leurs voisines.
+   On ne garde que les jours avec au moins 3 photos valides.
+3. **Conversion.** Les pixels sont convertis en centimètres (177 pixels = 1 mètre à la distance
+   de la balise). Une balise qui s'allonge de 1 cm correspond à une surface qui baisse de 1 cm.
+
+::: {.callout-note collapse="true"}
+## Limites à garder en tête
+
+- **On mesure la surface, pas directement l'épaisseur de glace.** La variation inclut la neige
+  fraîche, son tassement, la fonte et l'érosion par le vent. Elle ne distingue pas neige et glace.
+- **Raccords entre périodes.** La caméra a été recadrée trois fois. Chaque période est raccordée
+  à la précédente en supposant que la surface n'a pas bougé entre deux jours de mesure. C'est
+  raisonnable pour les raccords d'avril et d'octobre 2025 (un jour d'écart), beaucoup moins pour
+  celui de l'automne 2024 (6 semaines sans mesure, zone grisée).
+- **Précision.** Un pixel vaut environ 0,6 cm. Le facteur de conversion (177 px/m) est le même
+  pour toutes les périodes ; il n'a pas été recalibré après la maintenance d'octobre 2025.
+- **Météo.** Températures et chutes de neige proviennent du modèle
+  [Open-Meteo](https://open-meteo.com/) au point du site, pas d'une station sur place.
+:::
+
+## Données
+
+```{ojs}
+//| echo: false
+html`<p>Données journalières :
+  <a href="data/linceul/surface_daily.csv" download>surface_daily.csv</a> ·
+  <a href="data/linceul/meteo_daily.csv" download>meteo_daily.csv</a></p>`
+Inputs.table(surface, {
+  columns: ["date", "periode", "surface_cm", "lisse_cm", "n_photos"],
+  header: {date: "Date", periode: "Période", surface_cm: "Mesure (cm)", lisse_cm: "Tendance (cm)", n_photos: "Photos"},
+  format: {date: d => d.toISOString().slice(0, 10)},
+  sort: "date", reverse: true, rows: 10
+})
+```
+
+## Provenance {#provenance}
+
+```{ojs}
+//| echo: false
+{
+  const m = metadata;
+  const short = c => c ? c.slice(0, 7) : "inconnu";
+  const day = iso => iso.slice(0, 10);
+  const rows = m.periods.map(p => html`<tr>
+    <td>${p.label}</td><td>${day(p.first_photo)} → ${day(p.last_photo)}</td>
+    <td class="num">${p.photos}</td><td class="num">${p.valid_days}</td>
+    <td><code>${p.roi.join(" ")}</code></td><td class="num">${p.threshold}</td></tr>`);
+  return html`<div class="provenance">
+  <dl>
+    <dt>Date de l'analyse</dt><dd>${new Date(m.analysis_date).toLocaleString("fr-FR")}</dd>
+    <dt>staketracker</dt><dd>version ${m.staketracker.version}
+      (commit <a href="https://github.com/glacioraide/staketracker/commit/${m.staketracker.commit}"><code>${short(m.staketracker.commit)}</code></a>)</dd>
+    <dt>Pipeline</dt><dd>commit <a href="https://github.com/glacioraide/glacioraide.github.io/commit/${m.pipeline.commit}"><code>${short(m.pipeline.commit)}</code></a>${m.pipeline.dirty ? " (avec modifications locales)" : ""} ·
+      <a href="data/linceul/pipeline/config.toml">config.toml</a> ·
+      <a href="data/linceul/pipeline/pipeline.py">pipeline.py</a></dd>
+    <dt>Conversion</dt><dd>${m.px_per_metre} pixels par mètre</dd>
+    <dt>Météo</dt><dd>${m.meteo.source}, ${m.meteo.latitude}° N, ${m.meteo.longitude}° E</dd>
+    ${release ? html`<dt>Paquet de résultats</dt><dd><a href="${release.url}">${release.tag}</a></dd>` : ""}
+  </dl>
+  <table class="table table-sm">
+    <thead><tr><th>Période</th><th>Photos du … au …</th><th class="num">Photos</th><th class="num">Jours valides</th><th>Zone de recherche (x y l h)</th><th class="num">Seuil</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <p>Détections brutes, une ligne par photo :
+    ${m.periods.map(p => html`<span class="sep-item"><a href="data/linceul/detection/${p.id}_detection_results.csv">${p.label}</a></span>`)}</p>
+  </div>`;
+}
+```

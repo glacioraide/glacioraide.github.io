@@ -9,6 +9,8 @@ website:
     left:
       - href: index.qmd
         text: Home
+      - href: linceul.qmd
+        text: Linceul
       - about.qmd
 
 format:

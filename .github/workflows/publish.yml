@@ -2,17 +2,40 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+  # Un nouveau paquet de résultats (analyses/linceul/publish_results.sh) redéploie le site.
+  release:
+    types: [ published ]
 
 name: Quarto Publish
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
-  build-deploy:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+
+      - name: Download latest Linceul results
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,createdAt \
+            --jq '[.[] | select(.tagName | startswith("linceul-results-"))] | sort_by(.createdAt) | last | .tagName // empty')
+          if [ -z "$TAG" ]; then echo "::error::Aucune release linceul-results-* trouvée"; exit 1; fi
+          echo "Résultats : $TAG"
+          mkdir -p data/linceul
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern linceul-results.tar.gz --dir "$RUNNER_TEMP"
+          tar xzf "$RUNNER_TEMP/linceul-results.tar.gz" -C data/linceul
+          echo "{\"tag\": \"$TAG\", \"url\": \"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$TAG\"}" > data/linceul/release.json
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
@@ -22,10 +45,18 @@ jobs:
         with:
           to: html
 
-      - name: Render and Publish
-        uses: quarto-dev/quarto-actions/publish@v2
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
         with:
-          target: gh-pages
-          render: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,1 +1,29 @@
 /* css styles */
+
+/* Page Linceul : tuiles de chiffres clés */
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 1.5rem 0 0.5rem;
+}
+.stat-tile {
+  background: #f9f9f7;
+  border: 1px solid rgba(11, 11, 11, 0.08);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.stat-label { font-size: 0.8rem; color: #52514e; text-transform: uppercase; letter-spacing: 0.03em; }
+.stat-value { font-size: 1.8rem; font-weight: 600; color: #0b0b0b; line-height: 1.2; margin: 2px 0; }
+.stat-note { font-size: 0.8rem; color: #898781; }
+
+.linceul-chart { width: 100%; }
+.chart-help { font-size: 0.9rem; color: #52514e; }
+
+.provenance-line { font-size: 0.85rem; color: #898781; }
+.provenance dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; font-size: 0.9rem; }
+.provenance dt { font-weight: 600; color: #52514e; }
+.provenance dd { margin: 0; }
+.provenance table { font-size: 0.85rem; display: block; overflow-x: auto; }
+.provenance .num { text-align: right; }
+.sep-item + .sep-item::before { content: " · "; white-space: pre; }

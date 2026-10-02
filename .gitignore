@@ -4,3 +4,6 @@ _site/
 
 # OSX
 .DS_Store
+
+# Résultats d'analyse : téléchargés depuis les releases par le workflow
+/data/
