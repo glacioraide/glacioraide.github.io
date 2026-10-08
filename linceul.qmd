@@ -1,6 +1,6 @@
 ---
 title: "Glacier du Linceul"
-subtitle: "Évolution de la hauteur de surrface du glacier mesurée par une caméra automatique"
+subtitle: "Évolution de la hauteur de surface du glacier mesurée par une caméra automatique"
 toc: false
 resources:
   - data/linceul/**
