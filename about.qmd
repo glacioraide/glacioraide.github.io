@@ -6,7 +6,7 @@ title: "À propos"
 
 - Ludovic Ravanel (EDYTEM)
 - Xavier Cailhol (EDYTEM)
-- Emmanuel Malet (EDYTEM)
-- Jessica Leveque (LAPP)
+- Emmanuel Malet (EDYTEM)
+- Jessica Levêque (LAPP)
 - Eric Chabanne (LAPP)
 - Thomas Vuillaume (LAPP)

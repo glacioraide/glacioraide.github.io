@@ -8,5 +8,6 @@
 </div>
 
 
-Projet pour l'instrumentation et l'étude des glaciers suspendus en collaboration entre EDYTEM (USMB, CNRS) et le LAPP (USMB, CNRS).
+Projet pour l'instrumentation et l'étude des glaciers suspendus et tabliers de glace. <br>
+Collaboration entre <a href="https://edytem.osug.fr/">EDYTEM</a> et le <a href="https://www.lapp.in2p3.fr/">LAPP</a>.
 
