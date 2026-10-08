@@ -1,4 +1,4 @@
-<div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+<div style="display: flex; justify-content: center; align-items: center; gap: 30px;">
   <img src="assets/LOGO_CNRS_BLEU.png" style="height: 50px;">
   <img src="assets/lapp-logo.png" style="height: 50px;">
   <img src="assets/logo-edytem.png" style="height: 50px;">
@@ -10,13 +10,14 @@
   <img src="assets/logo-glacioraide.png" style="height: 300px;"/>
 </div>
 
-<h2> 
+<h2  style="text-align: center;"> 
 Projet interdisciplinaire pour l'instrumentation et l'étude des glaciers suspendus et tabliers de glace.
 
-<br><br>
+<br>
 
 Collaboration entre <a href="https://edytem.osug.fr/" target="_blank">EDYTEM</a> et le <a href="https://www.lapp.in2p3.fr/" target="_blank">LAPP</a>.
-<br><br>
+<br>
+
 Projet financé par le programme <a href="https://miti.cnrs.fr/programme-interne-80-prime/" target="_blank">
 MITI 80 PRIME 2026</a>
 </h2>
