@@ -1,6 +1,6 @@
 ---
 title: "Glacier du Linceul"
-subtitle: "Évolution de la surface du glacier mesurée par une caméra automatique"
+subtitle: "Évolution de la hauteur de surrface du glacier mesurée par une caméra automatique"
 toc: false
 resources:
   - data/linceul/**
@@ -75,7 +75,7 @@ html`<div class="stat-tiles">
 </div>`
 ```
 
-## Variation de la surface du glacier
+## Variation de la hauteur de la surface du glacier
 
 ```{ojs}
 //| echo: false
@@ -164,7 +164,7 @@ chart = {
     legend: {orientation: "h", x: 0, y: 1.06, yanchor: "bottom", font: {size: 12}},
     xaxis: {...axis, type: "date", domain: [0, 1], anchor: "y3", tickformat: "%b %Y", hoverformat: "%-d %B %Y",
             showspikes: true, spikemode: "across", spikethickness: 1, spikecolor: "#898781", spikedash: "solid"},
-    yaxis: {...axis, domain: [0.47, 1], title: {...axis.title, text: "Variation de la surface (cm)"}, ticksuffix: " "},
+    yaxis: {...axis, domain: [0.47, 1], title: {...axis.title, text: "Variation de la hauteur de la surface (cm)"}, ticksuffix: " "},
     yaxis2: {...axis, domain: [0.24, 0.42], zeroline: true, zerolinecolor: "#c3c2b7"},
     yaxis3: {...axis, domain: [0, 0.18], rangemode: "tozero"},
     shapes, annotations,
