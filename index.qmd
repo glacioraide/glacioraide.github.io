@@ -7,9 +7,9 @@
 
 
 <div class="center"><h2> 
- <img src="assets/logo-glacioraide.png" style="height: 100px;"<br><br>
+ <img src="assets/logo-glacioraide.png" style="height: 100px;"><br><br>
 
-Projet pour l'instrumentation et l'étude des glaciers suspendus et tabliers de glace. <br>
+Projet pour l'instrumentation et l'étude des glaciers suspendus et tabliers de glace.
 Collaboration entre <a href="https://edytem.osug.fr/" target="_blank">EDYTEM</a> et le <a href="https://www.lapp.in2p3.fr/" target="_blank">LAPP</a>.
 
 </h2></div>
