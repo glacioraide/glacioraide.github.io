@@ -11,8 +11,14 @@
 </div>
 
 <h2> 
-Projet interdisciplinaire pour l'instrumentation et l'étude des glaciers suspendus et tabliers de glace.<br><br>
+Projet interdisciplinaire pour l'instrumentation et l'étude des glaciers suspendus et tabliers de glace.
+
+<br><br>
+
 Collaboration entre <a href="https://edytem.osug.fr/" target="_blank">EDYTEM</a> et le <a href="https://www.lapp.in2p3.fr/" target="_blank">LAPP</a>.
+<br><br>
+Projet financé par le programme <a href="https://miti.cnrs.fr/programme-interne-80-prime/" target="_blank">
+MITI 80 PRIME 2026</a>
 </h2>
 
 
